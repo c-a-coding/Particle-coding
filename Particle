@@ -1,0 +1,52 @@
+import numpy as np
+
+class Particle:
+    def __init__(self, mass, position, velocity, state, temperature, electric_charge, pressure):
+        self.mass = mass
+        self.position = position
+        self.velocity = velocity
+        self.state = state  # "solid", "liquid", "gas", "plasma", "Bose-Einstein condensate"
+        self.temperature = temperature
+        self.electric_charge = electric_charge
+        self.pressure = pressure
+        
+    def kinetic_energy(self):
+        return 0.5 * self.mass * np.linalg.norm(self.velocity)**2
+    
+    def potential_energy(self, forces):
+        return np.sum([force.potential_energy(self.position, self.mass, self.electric_charge) for force in forces])
+    
+    def update(self, forces, dt):
+        acceleration = np.sum([force.acceleration(self.position, self.mass, self.electric_charge) for force in forces], axis=0) / self.mass
+        self.velocity += acceleration * dt
+        self.position += self.velocity * dt
+        
+    def update_temperature(self, heat_capacity):
+        self.temperature += self.heat / heat_capacity
+        
+    def update_pressure(self, volume):
+        self.pressure = self.number_density * self.temperature + self.mean_momentum**2 / (3 * volume)
+        
+    def update_state(self):
+        if self.temperature > self.melting_point and self.state == "solid":
+            self.state = "liquid"
+        elif self.temperature > self.boiling_point and self.state == "liquid":
+            self.state = "gas"
+        elif self.temperature > self.ionization_energy and self.state == "gas":
+            self.state = "plasma"
+        elif self.temperature < self.condensation_temperature and self.state == "gas":
+            self.state = "liquid"
+        elif self.temperature < self.freezing_point and self.state == "liquid":
+            self.state = "solid"
+        elif self.temperature < self.bose_einstein_temperature and self.state == "plasma":
+            self.state = "Bose-Einstein condensate"
+            
+    def fusion(self, other_particle):
+        # Check if the particles are close enough to fuse
+        distance = np.linalg.norm(self.position - other_particle.position)
+        if distance > self.fusion_distance:
+            return False
+        
+        # Calculate the mass and velocity of the fused particle
+        mass = self.mass + other_particle.mass
+        velocity = (self.velocity * self.mass + other_particle.velocity
