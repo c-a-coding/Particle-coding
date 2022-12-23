@@ -1,0 +1,36 @@
+import numpy as np
+
+class PhysicsSimulator:
+    def __init__(self, particles, dt):
+        self.particles = particles
+        self.dt = dt
+    
+    def update(self):
+        forces = self.calculate_forces()
+        
+        for i, particle in enumerate(self.particles):
+            particle.update(forces[i], self.dt)
+    
+    def calculate_forces(self):
+        forces = []
+        for particle in self.particles:
+            force = np.zeros(2)
+            for other in self.particles:
+                if particle == other:
+                    continue
+                # Add the gravitational force between the two particles
+                force += self.gravitational_force(particle, other)
+                # Add the electrostatic force between the two particles
+                force += self.electrostatic_force(particle, other)
+            forces.append(force)
+        return forces
+    
+    def gravitational_force(self, particle1, particle2):
+        G = 6.674e-11  # gravitational constant
+        r = np.linalg.norm(particle1.position - particle2.position)  # distance between the particles
+        return G * particle1.mass * particle2.mass / r**2 * (particle2.position - particle1.position) / r
+    
+    def electrostatic_force(self, particle1, particle2):
+        k = 8.987e9  # Coulomb's constant
+        r = np.linalg.norm(particle1.position - particle2.position)  # distance between the particles
+        return k * particle1.electric_charge * particle2.electric_charge / r**2 * (particle2.position - particle1.position) / r
